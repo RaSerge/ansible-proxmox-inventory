@@ -1,0 +1,7 @@
+{
+    "url": "https://192.168.200.24:8006/",
+    "username": "username@pam",
+    "password": "userpassword",
+    "qemu_interface": "ens18",
+    "validateCert": false
+}
