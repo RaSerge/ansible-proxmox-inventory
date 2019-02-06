@@ -91,6 +91,11 @@ class ProxmoxAPI(object):
                             options.password = config_data["password"]
                         except KeyError:
                             options.password = None
+                    if not options.qemu_interface:
+                        try:
+                            options.qemu_interface = config_data["qemu_interface"]
+                        except KeyError:
+                            options.qemu_interface = 'lo'
 
         if not options.url:
             raise Exception('Missing mandatory parameter --url (or PROXMOX_URL or "url" key in config file).')
@@ -103,7 +108,6 @@ class ProxmoxAPI(object):
 
     def auth(self):
         request_path = '{0}api2/json/access/ticket'.format(self.options.url)
-        print(request_path)
 
         request_params = {
             'username': self.options.username,
