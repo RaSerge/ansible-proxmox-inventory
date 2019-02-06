@@ -186,7 +186,7 @@ def main_list(options, config_path):
             if error.response.status_code == 595:
                 continue
             # on other errors
-            raise response.raise_for_status()
+            raise error.response.raise_for_status()
         results['all']['hosts'] += qemu_list.get_names()
         results['_meta']['hostvars'].update(qemu_list.get_variables())
 
@@ -200,7 +200,7 @@ def main_list(options, config_path):
             if node_ip:
                 for vm_interface in node_ip['result']:
                     if vm_interface['name'] == options.qemu_interface:
-                        results['_meta']['hostvars'][vm]['ansible_ssh_host'] = vm_interface['ip-addresses'][0]['ip-address']
+                        results['_meta']['hostvars'][vm]['ansible_host'] = vm_interface['ip-addresses'][0]['ip-address']
             try:
                 type = results['_meta']['hostvars'][vm]['proxmox_type']
             except KeyError:
