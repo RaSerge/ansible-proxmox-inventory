@@ -13,7 +13,7 @@ installed qemu-guest-agent on proxmox vm's
 
 - **Removed ansible lib requirements**
 - **Requests instead of urllib**
-- **Qemu interfaces ip detction**: if you have qemu-gues-agent installed and activated 
+- **Qemu interfaces ip detection**: You should have [qemu-guest-agent](https://pve.proxmox.com/wiki/Qemu-guest-agent) installed and activated 
 - **ProxmoxVE cluster**: if your have a ProxmoxVE cluster, it will gather the whole VM list from your cluster
 - **Advanced filtering**: you can filter the VM list based in their status or a custom tag included in the `Notes` field
 
