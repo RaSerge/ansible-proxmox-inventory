@@ -12,6 +12,9 @@ from optparse import OptionParser
 
 from six import iteritems
 
+# disable InsecureRequestWarning
+requests.packages.urllib3.disable_warnings()
+
 class ProxmoxNodeList(list):
     def get_names(self):
         return [node['node'] for node in self]
@@ -100,18 +103,14 @@ class ProxmoxAPI(object):
 
     def auth(self):
         request_path = '{0}api2/json/access/ticket'.format(self.options.url)
+        print(request_path)
 
         request_params = {
             'username': self.options.username,
             'password': self.options.password,
         }
-        data = json.load(requests.get(
-                            request_path, 
-                            params=request_params,
-                            verify=self.options.validate
-                            ).json())
 
-        print(data)
+        data = requests.post(request_path, data=request_params, verify=self.options.validate).json()
 
         self.credentials = {
             'ticket': data['data']['ticket'],
@@ -122,13 +121,12 @@ class ProxmoxAPI(object):
         request_path = '{0}{1}'.format(self.options.url, url)
 
         headers = {'Cookie': 'PVEAuthCookie={0}'.format(self.credentials['ticket'])}
-        response = json.load(requests.get(
+        response = requests.get(
                             request_path,
                             data=data,
                             headers=headers,
                             verify=self.options.validate
                             ).json()
-                   )
 
         return response['data']
 
