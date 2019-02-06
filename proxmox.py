@@ -105,11 +105,11 @@ class ProxmoxAPI(object):
             'username': self.options.username,
             'password': self.options.password,
         }
-        data = requests.get(
+        data = json.load(requests.get(
                             request_path, 
                             params=request_params,
                             verify=self.options.validate
-                            ).json()
+                            ).json())
 
         print(data)
 
@@ -122,8 +122,13 @@ class ProxmoxAPI(object):
         request_path = '{0}{1}'.format(self.options.url, url)
 
         headers = {'Cookie': 'PVEAuthCookie={0}'.format(self.credentials['ticket'])}
-        response = requests.get(request_path, data=data, headers=headers,
-                           verify=self.options.validate).json()
+        response = json.load(requests.get(
+                            request_path,
+                            data=data,
+                            headers=headers,
+                            verify=self.options.validate
+                            ).json()
+                   )
 
         return response['data']
 
