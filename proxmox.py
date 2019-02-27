@@ -200,10 +200,13 @@ def main_list(options, config_path):
             if node_ip:
                 for vm_interface in node_ip['result']:
                     if vm_interface['name'] == options.qemu_interface:
-                        try:
-                             results['_meta']['hostvars'][vm]['ansible_ssh_host'] = vm_interface['ip-addresses'][0]['ip-address']
-                        except KeyError as e:
-                          continue
+                        if vm_interface.get('ip-addresses').get("ip-address-type") == "ipv4":
+                            try:
+                              results['_meta']['hostvars'][vm]['ansible_ssh_host'] = vm_interface['ip-addresses']['ip-address']
+                            except KeyError as e:
+                              print('I got a KeyError - reason "{}"'.format(e))
+                            except IndexError as e:
+                              print('I got an IndexError - reason "{}"'.format(e))
             try:
                 type = results['_meta']['hostvars'][vm]['proxmox_type']
             except KeyError:
