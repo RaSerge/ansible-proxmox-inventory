@@ -9,15 +9,18 @@ except ImportError:
 import os
 import sys
 from optparse import OptionParser
+# import logging
 
 from six import iteritems
 
 # disable InsecureRequestWarning
 requests.packages.urllib3.disable_warnings()
+#enable debug loggig
+# logging.basicConfig(level=logging.DEBUG)
 
 class ProxmoxNodeList(list):
     def get_names(self):
-        return [node['node'] for node in self]
+        return [node['node'] for node in self if node['status'] == 'online' ]
 
 
 class ProxmoxVM(dict):
@@ -105,6 +108,9 @@ class ProxmoxAPI(object):
         elif not options.password:
             raise Exception(
                 'Missing mandatory parameter --password (or PROXMOX_PASSWORD or "password" key in config file).')
+        # URL should end with a trailing slash
+        if not options.url.endswith("/"):
+            options.url = options.url + "/"
 
     def auth(self):
         request_path = '{0}api2/json/access/ticket'.format(self.options.url)
@@ -125,12 +131,13 @@ class ProxmoxAPI(object):
         request_path = '{0}{1}'.format(self.options.url, url)
 
         headers = {'Cookie': 'PVEAuthCookie={0}'.format(self.credentials['ticket'])}
-        response = requests.get(
+        response_raw = requests.get(
                             request_path,
                             data=data,
                             headers=headers,
                             verify=self.options.validate
-                            ).json()
+                            )
+        response = response_raw.json()
 
         return response['data']
 
@@ -181,12 +188,12 @@ def main_list(options, config_path):
     for node in proxmox_api.nodes().get_names():
         try:
             qemu_list = proxmox_api.node_qemu(node)
-        except HTTPError as error:
+        except requests.HTTPError as error:
             # Proxmox API raises error code 595 when target node is unavailable, skip it
             if error.response.status_code == 595:
                 continue
             # on other errors
-            raise error.response.raise_for_status()
+            raise PipelineServiceError("{reason}".format(reason=error))
         results['all']['hosts'] += qemu_list.get_names()
         results['_meta']['hostvars'].update(qemu_list.get_variables())
 
@@ -199,8 +206,8 @@ def main_list(options, config_path):
             node_ip = proxmox_api.node_qemu_ip(node, vmid)
             if node_ip:
                 for vm_interface in node_ip['result']:
-                    if vm_interface['name'] == options.qemu_interface and 'ip-addresses' in vm_interface:
-                        results['_meta']['hostvars'][vm]['ansible_ssh_host'] = vm_interface['ip-addresses'][0]['ip-address']
+                    if vm_interface['name'] == options.qemu_interface:
+                        results['_meta']['hostvars'][vm]['ansible_host'] = vm_interface['ip-addresses'][0]['ip-address']
             try:
                 type = results['_meta']['hostvars'][vm]['proxmox_type']
             except KeyError:
@@ -307,4 +314,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
